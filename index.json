@@ -1,0 +1,8 @@
+{
+  "files": [
+    "files/linux/gcc/4.8.3/simple-64bit-dynamic",
+    "files/linux/gcc/4.8.2/basic-64bit-dynamic",
+    "files/linux/gcc/4.8.2/basic-32bit-dynamic",
+    "files/linux/clang/3.2-11/basic-64bit-dynamic"
+  ]
+}

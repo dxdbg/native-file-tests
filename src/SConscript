@@ -1,0 +1,21 @@
+#
+# SConscript for src directory
+#
+import subprocess
+import os
+import platform
+import json
+import hashlib
+
+Import('rootenv')
+
+localenv = rootenv.Clone()
+
+sources = [
+    'basic.c'
+]
+
+if localenv['CC'] == 'gcc':
+    localenv.Append(CFLAGS = '-g')
+
+# vim: ft=python
