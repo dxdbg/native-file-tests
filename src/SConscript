@@ -5,7 +5,40 @@ import subprocess
 import os
 import platform
 import json
-import hashlib
+
+
+def GenerateProgramMetadata(target, source, env):
+    flags = dict()
+    flags["CFLAGS"] = str(env["CFLAGS"])
+    flags["LINKFLAGS"] = str(env["LINKFLAGS"])
+
+    metadata = dict()
+    metadata["flags"] = flags
+    metadata["platform"] = platform.system().lower()
+    metadata["compiler"] = subprocess.check_output("gcc --version", shell=True)
+    metadata["machine"] = platform.machine().lower()
+
+    json_output = open(target[0].abspath, "w")
+    json_output.write(json.dumps(metadata))
+    json_output.flush()
+    json_output.close()
+
+    return None
+
+def CreateExecutable(env, base_name, source):
+    obj = env.Object(base_name, source)
+    program = env.Program(base_name, obj)
+    metadata = env.Command(base_name + ".json", program, GenerateProgramMetadata)
+
+def AddDebugFlag(env):
+    if env['CC'] == 'gcc':
+        env.Append(CFLAGS = '-g')
+
+def DebugNoOptDynamic(env):
+    AddDebugFlag(env)
+
+configs = list()
+configs.append(("debug-nopt-dynamic", DebugNoOptDynamic))
 
 Import('rootenv')
 
@@ -15,7 +48,13 @@ sources = [
     'basic.c'
 ]
 
-if localenv['CC'] == 'gcc':
-    localenv.Append(CFLAGS = '-g')
+for config in configs:
+    loopenv = localenv.Clone()
+    config[1](loopenv)
+
+    for source in sources:
+        base_name = os.path.splitext(source)[0]
+
+        CreateExecutable(loopenv, base_name + "-" + config[0], source)
 
 # vim: ft=python
