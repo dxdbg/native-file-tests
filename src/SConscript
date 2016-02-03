@@ -5,18 +5,30 @@ import subprocess
 import os
 import platform
 import json
-
+import hashlib
 
 def GenerateProgramMetadata(target, source, env):
     flags = dict()
     flags["CFLAGS"] = str(env["CFLAGS"])
     flags["LINKFLAGS"] = str(env["LINKFLAGS"])
 
+    executable = source[0]
+    executable_file = open(executable.abspath, "r")
+    executable_sha1 = hashlib.sha1(executable_file.read()).hexdigest()
+    executable_file.close()
+
+    obj = source[1]
+    obj_file = open(obj.abspath, "r")
+    obj_sha1 = hashlib.sha1(obj_file.read()).hexdigest()
+    obj_file.close()
+
     metadata = dict()
     metadata["flags"] = flags
     metadata["platform"] = platform.system().lower()
     metadata["compiler"] = subprocess.check_output("gcc --version", shell=True)
     metadata["machine"] = platform.machine().lower()
+    metadata["object_sha1"] = obj_sha1
+    metadata["executable_sha1"] = executable_sha1
 
     json_output = open(target[0].abspath, "w")
     json_output.write(json.dumps(metadata))
@@ -27,8 +39,8 @@ def GenerateProgramMetadata(target, source, env):
 
 def CreateExecutable(env, base_name, source):
     obj = env.Object(base_name, source)
-    program = env.Program(base_name, obj)
-    metadata = env.Command(base_name + ".json", program, GenerateProgramMetadata)
+    executable = env.Program(base_name, obj)
+    metadata = env.Command(base_name + ".json", [executable, obj], GenerateProgramMetadata)
 
 def AddDebugFlag(env):
     if env['CC'] == 'gcc':
