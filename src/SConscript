@@ -27,8 +27,8 @@ def GenerateProgramMetadata(target, source, env):
     metadata["platform"] = platform.system().lower()
     metadata["compiler"] = subprocess.check_output("gcc --version", shell=True)
     metadata["machine"] = platform.machine().lower()
-    metadata["object_sha1"] = obj_sha1
-    metadata["executable_sha1"] = executable_sha1
+    metadata["objectSha1"] = obj_sha1
+    metadata["executableSha1"] = executable_sha1
 
     json_output = open(target[0].abspath, "w")
     json_output.write(json.dumps(metadata))
