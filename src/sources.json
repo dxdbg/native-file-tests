@@ -1,0 +1,57 @@
+[
+    {
+        "name" : "basic",
+        "sources" : [
+            "basic.c"
+        ],
+        "platform_sources" : {
+        },
+        "libs" : [
+        ]
+    },
+    {
+        "name" : "simple",
+        "sources" : [
+            "simple.c",
+            "bin_lib.c"
+        ],
+        "platform_sources" : {
+            "linux" : [
+                "bin_lib_linux.c"
+            ]
+        },
+        "libs" : [
+        ]
+    },
+    {
+        "name" : "signal",
+        "sources" : [
+            "signal.c",
+            "bin_lib.c"
+        ],
+        "platform_sources" : {
+            "linux" : [
+                "bin_lib_linux.c"
+            ]
+        },
+        "libs" : [
+        ]
+    },
+    {
+        "name" : "waitthread",
+        "sources" : [
+            "bin_lib.c"
+        ],
+        "platform_sources" : {
+            "linux" : [
+                "bin_lib_linux.c",
+                "waitthread-posix.c"
+            ]
+        },
+        "libs" : {
+            "linux" : [
+                "pthread"
+            ]
+        }
+    }
+]
