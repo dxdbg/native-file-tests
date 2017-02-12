@@ -7,6 +7,8 @@ import platform
 import json
 import hashlib
 
+system = platform.system().lower()
+
 def GenerateProgramMetadata(target, source, env):
     flags = dict()
     flags["CFLAGS"] = str(env["CFLAGS"])
@@ -17,17 +19,19 @@ def GenerateProgramMetadata(target, source, env):
     executable_sha1 = hashlib.sha1(executable_file.read()).hexdigest()
     executable_file.close()
 
-    obj = source[1]
-    obj_file = open(obj.abspath, "r")
-    obj_sha1 = hashlib.sha1(obj_file.read()).hexdigest()
-    obj_file.close()
+    obj_sha1s = dict()
+    for obj in source[1:]:
+        obj_file = open(obj.abspath, "r")
+        obj_sha1 = hashlib.sha1(obj_file.read()).hexdigest()
+        obj_file.close()
+        obj_sha1s[obj.name] = obj_sha1
 
     metadata = dict()
     metadata["flags"] = flags
-    metadata["platform"] = platform.system().lower()
+    metadata["platform"] = system
     metadata["compiler"] = subprocess.check_output("gcc --version", shell=True)
     metadata["machine"] = platform.machine().lower()
-    metadata["objectSha1"] = obj_sha1
+    metadata["objectSha1s"] = obj_sha1s
     metadata["executableSha1"] = executable_sha1
 
     json_output = open(target[0].abspath, "w")
@@ -37,11 +41,6 @@ def GenerateProgramMetadata(target, source, env):
 
     return None
 
-def CreateExecutable(env, base_name, source):
-    obj = env.Object(base_name, source)
-    executable = env.Program(base_name, obj)
-    metadata = env.Command(base_name + ".json", [executable, obj], GenerateProgramMetadata)
-
 def AddDebugFlag(env):
     if env['CC'] == 'gcc':
         env.Append(CFLAGS = '-g')
@@ -50,23 +49,47 @@ def DebugNoOptDynamic(env):
     AddDebugFlag(env)
 
 configs = list()
-configs.append(("debug-nopt-dynamic", DebugNoOptDynamic))
+configs.append(("debug-noopt-dynamic", DebugNoOptDynamic))
 
 Import('rootenv')
 
 localenv = rootenv.Clone()
 
-sources = [
-    'basic.c'
-]
+sources_file = open(File("sources.json").srcnode().abspath, "r")
+source_configs = json.load(sources_file)
+sources_file.close()
+
 
 for config in configs:
     loopenv = localenv.Clone()
     config[1](loopenv)
 
-    for source in sources:
-        base_name = os.path.splitext(source)[0]
+    saved_objs = dict()
 
-        CreateExecutable(loopenv, base_name + "-" + config[0], source)
+    for source_config in source_configs:
+        objs = []
+        for source in source_config["sources"]:
+            if source in saved_objs:
+                objs.append(saved_objs[source])
+            else:
+                objs.append(loopenv.Object("${SOURCE.filebase}" + "-" + config[0] + "$OBJSUFFIX", source))
+
+        if system in source_config["platform_sources"]:
+            for source in source_config["platform_sources"][system]:
+                if source in saved_objs:
+                    objs.append(saved_objs[source])
+                else:
+                    objs.append(loopenv.Object("${SOURCE.filebase}" + "-" + config[0] + "$OBJSUFFIX", source))
+
+        libs = []
+        if system in source_config["libs"]:
+            for lib in source_config["libs"][system]:
+                libs.append(lib)
+
+        executable = loopenv.Program(source_config["name"] + "-" + config[0], objs, LIBS=libs)
+
+        metadata_sources = [executable]
+        metadata_sources.append(objs)
+        loopenv.Command(source_config["name"] + "-" + config[0] + ".json", metadata_sources, GenerateProgramMetadata)
 
 # vim: ft=python
