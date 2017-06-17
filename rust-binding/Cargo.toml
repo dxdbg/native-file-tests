@@ -1,0 +1,7 @@
+[package]
+name = "native_file_tests"
+version = "0.1.0"
+authors = ["Dan McNulty <dkmcnulty@gmail.com>"]
+
+[dependencies]
+goblin = "0.0.10"
