@@ -23,17 +23,31 @@ const SIMPLE_BINARY: &'static str =
 const WAITTHREAD_BINARY: &'static str =
     "waitthread-debug-noopt-dynamic.9bb7ace83d00e653b003e05b15ee7f9944c7f261";
 
-pub fn setup(out_path: &PathBuf, url: &str) {
-    let dest_path = out_path.join("native-file-tests.zip");
+const ZIP_NAME: &'static str = "native-file-tests.zip";
 
-    Command::new("curl").arg("-sSf")
-                        .arg("-o")
-                        .arg(dest_path.to_str().unwrap())
-                        .arg(url)
-                        .spawn()
-                        .expect("Failed to start download of native file tests zip")
-                        .wait()
-                        .expect("Failed to download native file tests zip");
+pub fn setup(out_path: &PathBuf, manifest_dir: &PathBuf, url: &str) {
+
+    let dest_path = out_path.join(ZIP_NAME);
+
+    // Only download the zip if it's not present in the manifest directory
+    let manifest_zip_path = manifest_dir.join(ZIP_NAME);
+    if manifest_zip_path.exists() {
+        Command::new("cp").arg(manifest_zip_path.to_str().unwrap())
+                          .arg(dest_path.to_str().unwrap())
+                          .spawn()
+                          .expect("Failed to start copy of native file tests zip")
+                          .wait()
+                          .expect("Failed to copy of native file tests zip");
+    } else {
+        Command::new("curl").arg("-sSf")
+                            .arg("-o")
+                            .arg(dest_path.to_str().unwrap())
+                            .arg(url)
+                            .spawn()
+                            .expect("Failed to start download of native file tests zip")
+                            .wait()
+                            .expect("Failed to download native file tests zip");
+    }
 
     let dest_dir = out_path.join("native-file-tests");
     Command::new("unzip").arg("-j")
