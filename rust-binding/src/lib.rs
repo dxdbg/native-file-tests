@@ -17,23 +17,27 @@ use std::io::Read;
 use std::path::PathBuf;
 use std::process::Command;
 
+// TODO dynamically select correct binaries based on platform
 const SIMPLE_BINARY: &'static str =
-    "simple-debug-noopt-dynamic.cd52194667df0781720ff834a56df134fef7fb51";
+    "simple-debug-noopt-dynamic.e537d89753d335c4819963172276d34dcd5932d2";
 
 const WAITTHREAD_BINARY: &'static str =
-    "waitthread-debug-noopt-dynamic.9bb7ace83d00e653b003e05b15ee7f9944c7f261";
+    "waitthread-debug-noopt-dynamic.0e8e1118053d6ea41cf58968d1e56e9708ff6758";
 
-pub fn setup(out_path: &PathBuf, zip_path: &PathBuf) {
+pub fn setup(manifest_path: &PathBuf, out_path: &PathBuf, zip_path: &PathBuf) {
 
-    let dest_dir = out_path.join("native-file-tests");
-    Command::new("unzip").arg("-j")
-                         .arg(zip_path.to_str().unwrap())
-                         .arg("-d")
-                         .arg(dest_dir.to_str().unwrap())
-                         .spawn()
-                         .expect("Failed to start extract of native file tests zip")
-                         .wait()
-                         .expect("Failed to extract native file tests zip");
+    let dest_dir = manifest_path.join("native-file-tests");
+
+    if !dest_dir.exists() {
+        Command::new("unzip").arg("-j")
+                             .arg(zip_path.to_str().unwrap())
+                             .arg("-d")
+                             .arg(dest_dir.to_str().unwrap())
+                             .spawn()
+                             .expect("Failed to start extract of native file tests zip")
+                             .wait()
+                             .expect("Failed to extract native file tests zip");
+    }
 
     let simple_path = dest_dir.join(SIMPLE_BINARY);
     let waitthread_path = dest_dir.join(WAITTHREAD_BINARY);
@@ -87,9 +91,18 @@ fn add_waitthread_binary_symbols(dest_dir: &PathBuf, symbols: &mut HashMap<&str,
     let path = dest_dir.join(WAITTHREAD_BINARY);
 
     for_each_symbols(&path, |name, value, _| {
-        if name == "breakpoint_func" {
-            symbols.insert("THREAD_BREAK_FUNC", format!("0x{:x}", value));
-        }
+        match name.as_str() {
+            "breakpoint_thr_func" => {
+                symbols.insert("THREAD_BREAK_FUNC", format!("0x{:x}", value));
+            },
+            "start_notification" => {
+                symbols.insert("START_NOTIFICATION_FUNC", format!("0x{:x}", value));
+            },
+            "term_notification" => {
+                symbols.insert("TERM_NOTIFICATION_FUNC", format!("0x{:x}", value));
+            },
+            _ => {}
+        };
     });
 }
 
