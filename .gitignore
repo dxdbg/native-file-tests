@@ -3,3 +3,5 @@ build
 .sconsign.dblite
 dist
 rust-binding/target
+*.iml
+java-binding/target
