@@ -1,10 +1,3 @@
-[root]
-name = "native_file_tests"
-version = "0.1.0"
-dependencies = [
- "goblin 0.0.10 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
 [[package]]
 name = "goblin"
 version = "0.0.10"
@@ -13,6 +6,13 @@ dependencies = [
  "plain 0.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "scroll 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "scroll_derive 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "native_file_tests"
+version = "0.1.0"
+dependencies = [
+ "goblin 0.0.10 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
