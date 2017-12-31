@@ -2,7 +2,7 @@
 
 #include "bin_lib.h"
 
-static const char *DEBUG_ENV = "UDI_TEST_DEBUG";
+static const char *DEBUG_ENV = "NFT_DEBUG";
 
 int bin_debug_enable = 0;
 
