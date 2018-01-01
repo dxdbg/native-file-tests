@@ -10,6 +10,11 @@
 
 extern crate goblin;
 
+extern crate serde;
+#[macro_use]
+extern crate serde_derive;
+extern crate serde_json;
+
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::Write;
@@ -17,12 +22,30 @@ use std::io::Read;
 use std::path::PathBuf;
 use std::process::Command;
 
-// TODO dynamically select correct binaries based on platform
-const SIMPLE_BINARY: &'static str =
-    "simple-debug-noopt-dynamic.e537d89753d335c4819963172276d34dcd5932d2";
+use serde::Deserialize;
+use serde_json::Deserializer;
 
-const WAITTHREAD_BINARY: &'static str =
-    "waitthread-debug-noopt-dynamic.0e8e1118053d6ea41cf58968d1e56e9708ff6758";
+// TODO dynamically select correct binaries based on platform
+const SIMPLE_BINARY_PREFIX: &'static str = "simple-debug-noopt-dynamic";
+const WAITTHREAD_BINARY_PREFIX: &'static str = "waitthread-debug-noopt-dynamic";
+
+#[derive(Debug,Serialize,Deserialize)]
+struct NativeFileMetadata {
+
+    #[serde(rename = "objectSha1s")]
+    objects: HashMap<String, String>,
+
+    #[serde(rename = "executableSha1")]
+    executable: String,
+
+    machine: String,
+
+    platform: String,
+
+    flags: HashMap<String, String>,
+
+    compiler: String
+}
 
 pub fn setup(manifest_path: &PathBuf, out_path: &PathBuf, zip_path: &PathBuf) {
 
@@ -39,13 +62,32 @@ pub fn setup(manifest_path: &PathBuf, out_path: &PathBuf, zip_path: &PathBuf) {
                              .expect("Failed to extract native file tests zip");
     }
 
-    let simple_path = dest_dir.join(SIMPLE_BINARY);
-    let waitthread_path = dest_dir.join(WAITTHREAD_BINARY);
+    let mut simple_path_opt = None;
+    let mut waitthread_path_opt = None;
+
+    for entry in dest_dir.read_dir()
+                         .expect("Failed to enumerate native-file-tests directory") {
+        let path = entry.expect("Failed to enumerate directory entry").path();
+
+        if path.is_file() {
+            let file_name = path.file_name().unwrap().to_string_lossy().to_string();
+            if file_name.starts_with(&(SIMPLE_BINARY_PREFIX.to_owned() + ".json.")) {
+                simple_path_opt = Some(dest_dir.join(get_exec_file_name(SIMPLE_BINARY_PREFIX,
+                                                                        &path)));
+            } else if file_name.starts_with(&(WAITTHREAD_BINARY_PREFIX.to_owned() + ".json.")) {
+                waitthread_path_opt = Some(dest_dir.join(get_exec_file_name(WAITTHREAD_BINARY_PREFIX,
+                                                                            &path)));
+            }
+        }
+    }
+
+    let simple_path = simple_path_opt.expect("Path to simple binary was not set");
+    let waitthread_path = waitthread_path_opt.expect("Path to waitthread binary was not set");
 
     let mod_file_path = out_path.join("native_file_tests.rs");
     let mut mod_file = File::create(&mod_file_path).unwrap();
 
-    let symbols = build_symbols(&dest_dir);
+    let symbols = build_symbols(&simple_path, &waitthread_path);
 
     let sym_defs = symbols.iter()
                           .map(|e| format!("pub const {}: u64 = {};\n", e.0, e.1))
@@ -65,19 +107,29 @@ pub const WAITTHREAD_EXEC_PATH: &'static str = \"{}\";
             .expect("Failed to write native file tests module");
 }
 
-fn build_symbols(dest_dir: &PathBuf) -> HashMap<&str, String> {
+fn get_exec_file_name(prefix: &str, json_path: &PathBuf) -> String {
+    let mut json_file = File::open(json_path).unwrap();
+
+    let mut de = Deserializer::from_reader(&mut json_file);
+
+    let metadata: NativeFileMetadata = Deserialize::deserialize(&mut de).unwrap();
+
+    prefix.to_owned() + "." + &metadata.executable
+}
+
+fn build_symbols(simple_path: &PathBuf,
+                 waitthread_path: &PathBuf) -> HashMap<&'static str, String> {
     let mut symbols = HashMap::new();
 
-    add_simple_binary_symbols(dest_dir, &mut symbols);
-    add_waitthread_binary_symbols(dest_dir, &mut symbols);
+    add_simple_binary_symbols(simple_path, &mut symbols);
+    add_waitthread_binary_symbols(waitthread_path, &mut symbols);
 
     symbols
 }
 
-fn add_simple_binary_symbols(dest_dir: &PathBuf, symbols: &mut HashMap<&str, String>) {
-    let path = dest_dir.join(SIMPLE_BINARY);
+fn add_simple_binary_symbols(path: &PathBuf, symbols: &mut HashMap<&'static str, String>) {
 
-    for_each_symbols(&path, |name, value, size| {
+    for_each_symbols(path, |name, value, size| {
         if name == "function1" {
             symbols.insert("SIMPLE_FUNCTION1", format!("0x{:x}", value));
         } else if name == "function2" {
@@ -87,10 +139,9 @@ fn add_simple_binary_symbols(dest_dir: &PathBuf, symbols: &mut HashMap<&str, Str
     });
 }
 
-fn add_waitthread_binary_symbols(dest_dir: &PathBuf, symbols: &mut HashMap<&str, String>) {
-    let path = dest_dir.join(WAITTHREAD_BINARY);
+fn add_waitthread_binary_symbols(path: &PathBuf, symbols: &mut HashMap<&'static str, String>) {
 
-    for_each_symbols(&path, |name, value, _| {
+    for_each_symbols(path, |name, value, _| {
         match name.as_str() {
             "breakpoint_thr_func" => {
                 symbols.insert("THREAD_BREAK_FUNC", format!("0x{:x}", value));
