@@ -1,20 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "bin_lib.h"
-
-#ifndef UNIX
-
-int main(int argc, char *argv[]) {
-    init_bin();
-
-    return EXIT_SUCCESS;
-}
-
-#else
-
 #include <signal.h>
 #include <unistd.h>
+
+#include "bin_lib.h"
 
 volatile int wait_flag = 0;
 
@@ -37,5 +27,3 @@ int main(int argc, char *argv[]) {
 
     return EXIT_SUCCESS;
 }
-
-#endif

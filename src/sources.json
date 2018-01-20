@@ -18,6 +18,9 @@
         "platform_sources" : {
             "linux" : [
                 "bin_lib_linux.c"
+            ],
+            "darwin" : [
+                "bin_lib_darwin.c"
             ]
         },
         "libs" : [
@@ -26,12 +29,16 @@
     {
         "name" : "signal",
         "sources" : [
-            "signal.c",
             "bin_lib.c"
         ],
         "platform_sources" : {
             "linux" : [
+                "signal-posix.c",
                 "bin_lib_linux.c"
+            ],
+            "darwin" : [
+                "signal-posix.c",
+                "bin_lib_darwin.c"
             ]
         },
         "libs" : [
@@ -45,6 +52,10 @@
         "platform_sources" : {
             "linux" : [
                 "bin_lib_linux.c",
+                "waitthread-posix.c"
+            ],
+            "darwin" : [
+                "bin_lib_darwin.c",
                 "waitthread-posix.c"
             ]
         },

@@ -11,6 +11,7 @@
 #define _BIN_LIB_H_ 1
 
 #include <stdio.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -20,7 +21,7 @@ extern int bin_debug_enable;
 
 void init_bin();
 
-long udi_get_thread_id(int pid);
+uint64_t udi_get_thread_id(int pid);
 
 #define bin_printf(format, ...) \
     do {\

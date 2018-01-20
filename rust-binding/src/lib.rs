@@ -22,12 +22,16 @@ use std::io::Read;
 use std::path::PathBuf;
 use std::process::Command;
 
+use goblin::Object;
+
 use serde::Deserialize;
 use serde_json::Deserializer;
 
-// TODO dynamically select correct binaries based on platform
 const SIMPLE_BINARY_PREFIX: &'static str = "simple-debug-noopt-dynamic";
 const WAITTHREAD_BINARY_PREFIX: &'static str = "waitthread-debug-noopt-dynamic";
+
+const LINUX_PLATFORM: &'static str = "linux";
+const DARWIN_PLATFORM: &'static str = "darwin";
 
 #[derive(Debug,Serialize,Deserialize)]
 struct NativeFileMetadata {
@@ -47,7 +51,12 @@ struct NativeFileMetadata {
     compiler: String
 }
 
-pub fn setup(manifest_path: &PathBuf, out_path: &PathBuf, zip_path: &PathBuf) {
+pub fn setup(manifest_path: &PathBuf,
+             out_path: &PathBuf,
+             zip_path: &PathBuf,
+             cargo_platform: &str) {
+
+    let platform = convert_to_nft_platform(cargo_platform);
 
     let dest_dir = manifest_path.join("native-file-tests");
 
@@ -71,12 +80,19 @@ pub fn setup(manifest_path: &PathBuf, out_path: &PathBuf, zip_path: &PathBuf) {
 
         if path.is_file() {
             let file_name = path.file_name().unwrap().to_string_lossy().to_string();
-            if file_name.starts_with(&(SIMPLE_BINARY_PREFIX.to_owned() + ".json.")) {
-                simple_path_opt = Some(dest_dir.join(get_exec_file_name(SIMPLE_BINARY_PREFIX,
-                                                                        &path)));
-            } else if file_name.starts_with(&(WAITTHREAD_BINARY_PREFIX.to_owned() + ".json.")) {
-                waitthread_path_opt = Some(dest_dir.join(get_exec_file_name(WAITTHREAD_BINARY_PREFIX,
-                                                                            &path)));
+            if file_name.contains(".json") {
+                let metadata = get_metadata(&path);
+                if metadata.platform == platform {
+                    if file_name.starts_with(&(SIMPLE_BINARY_PREFIX.to_owned())) {
+                        simple_path_opt =
+                            Some(dest_dir.join(get_exec_file_name(SIMPLE_BINARY_PREFIX,
+                                                                  &metadata)));
+                    } else if file_name.starts_with(&(WAITTHREAD_BINARY_PREFIX.to_owned())) {
+                        waitthread_path_opt =
+                            Some(dest_dir.join(get_exec_file_name(WAITTHREAD_BINARY_PREFIX,
+                                                                  &metadata)));
+                    }
+                }
             }
         }
     }
@@ -107,14 +123,24 @@ pub const WAITTHREAD_EXEC_PATH: &'static str = \"{}\";
             .expect("Failed to write native file tests module");
 }
 
-fn get_exec_file_name(prefix: &str, json_path: &PathBuf) -> String {
+fn convert_to_nft_platform(cargo_platform: &str) -> &str {
+    match cargo_platform {
+        "linux" => LINUX_PLATFORM,
+        "macos" => DARWIN_PLATFORM,
+        _ => panic!(format!("Unsupported platform"))
+    }
+}
+
+fn get_exec_file_name(prefix: &str, metadata: &NativeFileMetadata) -> String {
+    prefix.to_owned() + "." + &metadata.executable
+}
+
+fn get_metadata(json_path: &PathBuf) -> NativeFileMetadata {
     let mut json_file = File::open(json_path).unwrap();
 
     let mut de = Deserializer::from_reader(&mut json_file);
 
-    let metadata: NativeFileMetadata = Deserialize::deserialize(&mut de).unwrap();
-
-    prefix.to_owned() + "." + &metadata.executable
+    Deserialize::deserialize(&mut de).unwrap()
 }
 
 fn build_symbols(simple_path: &PathBuf,
@@ -165,13 +191,21 @@ fn for_each_symbols<F>(path: &PathBuf, mut func: F)
     let mut buffer = vec![];
     binary_file.read_to_end(&mut buffer).unwrap();
 
-    match goblin::parse(&buffer).unwrap() {
-        goblin::Object::Elf(elf) => {
+    match Object::parse(&buffer).unwrap() {
+        Object::Elf(elf) => {
             let strtab = &(elf.strtab);
             for sym in &(elf.syms) {
-                func(&(strtab.get(sym.st_name).unwrap().to_owned()),
+                func(&(strtab.get(sym.st_name).unwrap().unwrap().to_owned()),
                      sym.st_value,
                      sym.st_size);
+            }
+        },
+        Object::Mach(goblin::mach::Mach::Binary(mach)) => {
+            let syms = mach.symbols.unwrap();
+
+            for sym_result in syms.iter() {
+                let (name, nlist) = sym_result.unwrap();
+                func(&name.to_owned(), nlist.n_desc as u64, nlist.n_value);
             }
         },
         _ => {

@@ -6,7 +6,7 @@
 rm -rf dist
 mkdir dist
 
-for file in `ls ./build/src/*`; do
+for file in `ls ./build/*/*`; do
     base=`basename $file`
     sha1=`sha1sum $file | awk '{ print $1 }'`
     cp $file dist/$base.$sha1
