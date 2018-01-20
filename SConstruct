@@ -1,12 +1,14 @@
 #
 # Top level SConscript file for native-file-tests
 #
+import platform
+
 rootenv = Environment()
 
 Export('rootenv')
 
 # subdirectories
-rootenv.SConscript('#/src/SConscript', variant_dir='#/build/src', duplicate=False)
+rootenv.SConscript('#/src/SConscript', variant_dir='#/build/' + platform.platform(), duplicate=False)
 
 # default target
 rootenv.Default('src')
