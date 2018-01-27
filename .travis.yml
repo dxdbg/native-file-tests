@@ -5,15 +5,17 @@
 notifications:
   email: false
 
+language: c
+
+os:
+  - linux
+  - osx
+
 jobs:
   include:
   - stage: test
-    os:
-      - linux
-      - osx
     before_install:
       - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install scons; fi
-    language: c
     script: scons
     after_script:
       - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export NFT_PLATFORM_NAME="macos"; fi

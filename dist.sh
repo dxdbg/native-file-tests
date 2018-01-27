@@ -19,4 +19,4 @@ for file in `ls ./build/*/*`; do
     cp $file native-file-tests-$PLATFORM_NAME-$VERSION/$base.$sha1
 done
 
-zip -r native-file-tests-$PLATFORM_NAME-$VERSION.zip native-file-tests-$PLATFORM_NAME-$VERSION/
+zip -r native-file-tests-$PLATFORM_NAME-$VERSION.zip native-file-tests-$PLATFORM_NAME-$VERSION/ 2>&1
