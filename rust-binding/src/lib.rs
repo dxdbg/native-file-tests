@@ -42,6 +42,9 @@ struct NativeFileMetadata {
     #[serde(rename = "executableSha1")]
     executable: String,
 
+    #[serde(rename = "debugSha1")]
+    debug_exec: Option<String>,
+
     machine: String,
 
     platform: String,
@@ -132,7 +135,11 @@ fn convert_to_nft_platform(cargo_platform: &str) -> &str {
 }
 
 fn get_exec_file_name(prefix: &str, metadata: &NativeFileMetadata) -> String {
-    prefix.to_owned() + "." + &metadata.executable
+    let suffix = match metadata.debug_exec {
+        Some(ref debug_sha1) => ".debug".to_owned() + debug_sha1,
+        None => metadata.executable.clone()
+    };
+    prefix.to_owned() + "." + &suffix
 }
 
 fn get_metadata(json_path: &PathBuf) -> NativeFileMetadata {
@@ -156,9 +163,9 @@ fn build_symbols(simple_path: &PathBuf,
 fn add_simple_binary_symbols(path: &PathBuf, symbols: &mut HashMap<&'static str, String>) {
 
     for_each_symbols(path, |name, value, size| {
-        if name == "function1" {
+        if name == "function1" || name == "_function1" {
             symbols.insert("SIMPLE_FUNCTION1", format!("0x{:x}", value));
-        } else if name == "function2" {
+        } else if name == "function2" || name == "_function2" {
             symbols.insert("SIMPLE_FUNCTION2", format!("0x{:x}", value));
             symbols.insert("SIMPLE_FUNCTION2_LENGTH", size.to_string());
         }
@@ -169,13 +176,13 @@ fn add_waitthread_binary_symbols(path: &PathBuf, symbols: &mut HashMap<&'static 
 
     for_each_symbols(path, |name, value, _| {
         match name.as_str() {
-            "breakpoint_thr_func" => {
+            "breakpoint_thr_func" | "_breakpoint_thr_func" => {
                 symbols.insert("THREAD_BREAK_FUNC", format!("0x{:x}", value));
             },
-            "start_notification" => {
+            "start_notification" | "_start_notifcation" => {
                 symbols.insert("START_NOTIFICATION_FUNC", format!("0x{:x}", value));
             },
-            "term_notification" => {
+            "term_notification" | "_term_notifcation" => {
                 symbols.insert("TERM_NOTIFICATION_FUNC", format!("0x{:x}", value));
             },
             _ => {}

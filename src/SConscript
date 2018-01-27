@@ -19,8 +19,21 @@ def GenerateProgramMetadata(target, source, env):
     executable_sha1 = hashlib.sha1(executable_file.read()).hexdigest()
     executable_file.close()
 
+    stripped = source[1]
+    stripped_file = open(stripped.abspath, "r")
+    stripped_sha1 = hashlib.sha1(stripped_file.read()).hexdigest()
+    stripped_file.close()
+
+    debug = source[2]
+    if debug.abspath != executable.abspath:
+        debug_file = open(debug.abspath, "r")
+        debug_sha1 = hashlib.sha1(debug_file.read()).hexdigest()
+        debug_file.close()
+    else:
+        debug_sha1 = None
+
     obj_sha1s = dict()
-    for obj in source[1:]:
+    for obj in source[2:]:
         obj_file = open(obj.abspath, "r")
         obj_sha1 = hashlib.sha1(obj_file.read()).hexdigest()
         obj_file.close()
@@ -33,6 +46,8 @@ def GenerateProgramMetadata(target, source, env):
     metadata["machine"] = platform.machine().lower()
     metadata["objectSha1s"] = obj_sha1s
     metadata["executableSha1"] = executable_sha1
+    metadata["debugSha1"] = debug_sha1
+    metadata["strippedSha1"] = stripped_sha1
 
     json_output = open(target[0].abspath, "w")
     json_output.write(json.dumps(metadata))
@@ -59,6 +74,20 @@ sources_file = open(File("sources.json").srcnode().abspath, "r")
 source_configs = json.load(sources_file)
 sources_file.close()
 
+def Executable(env, target, objs, libs):
+    if platform.system() == 'Darwin':
+        program = env.Program(target, objs, LIBS=libs)
+        debug = env.Command(target + ".debug", program, "dsymutil -f -o $TARGET $SOURCES")
+        stripped = env.Command(target + ".nosym", program, "strip -o $TARGET $SOURCES")
+        return [program, stripped, debug]
+    elif platform.system() == 'Linux':
+        program = env.Program(target, objs, LIBS=libs)
+        stripped = env.Command(target + ".nosym", program, "strip -o $TARGET $SOURCES")
+        return [program, stripped, program]
+    else:
+        raise RuntimeError("Unknown platform")
+
+localenv.AddMethod(Executable, "Executable")
 
 for config in configs:
     loopenv = localenv.Clone()
@@ -86,9 +115,10 @@ for config in configs:
             for lib in source_config["libs"][system]:
                 libs.append(lib)
 
-        executable = loopenv.Program(source_config["name"] + "-" + config[0], objs, LIBS=libs)
+        executables = loopenv.Executable(source_config["name"] + "-" + config[0], objs, libs=libs)
 
-        metadata_sources = [executable]
+        metadata_sources = list()
+        metadata_sources.append(executables)
         metadata_sources.append(objs)
         loopenv.Command(source_config["name"] + "-" + config[0] + ".json", metadata_sources, GenerateProgramMetadata)
 

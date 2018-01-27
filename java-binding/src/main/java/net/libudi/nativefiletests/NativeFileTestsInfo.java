@@ -39,6 +39,8 @@ public final class NativeFileTestsInfo
 
     public NativeFileTestsInfo(Path basePath) throws IOException
     {
+        String platformName = getNftPlatformName();
+
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(basePath, "*.json.*")) {
             for (Path jsonFile : stream)
             {
@@ -47,20 +49,31 @@ public final class NativeFileTestsInfo
                 try (InputStream jsonFileStream = Files.newInputStream(jsonFile)) {
                     NativeFileMetadata metadata = objectMapper.readValue(jsonFileStream, NativeFileMetadata.class);
 
-                    Set<Path> objectFilePaths = objectPaths.computeIfAbsent(baseName, k -> new HashSet<>());
+                    if (metadata.getPlatform().equals(platformName)) {
+                        Set<Path> objectFilePaths = objectPaths.computeIfAbsent(baseName, k -> new HashSet<>());
 
-                    objectFilePaths.addAll(metadata.getObjectSha1s()
-                                           .entrySet()
-                                           .stream()
-                                           .map(e -> e.getKey() + "." + e.getValue())
-                                           .map(file -> Paths.get(basePath.toAbsolutePath().toString(), file))
-                                           .collect(Collectors.toList()));
+                        objectFilePaths.addAll(metadata.getObjectSha1s()
+                                                       .entrySet()
+                                                       .stream()
+                                                       .map(e -> e.getKey() + "." + e.getValue())
+                                                       .map(file -> Paths.get(basePath.toAbsolutePath().toString(),
+                                                                              file))
+                                                       .collect(Collectors.toList()));
 
-                    Set<Path> executableFilePaths = executablePaths.computeIfAbsent(baseName, k -> new HashSet<>());
-                    String executableFileName = baseName + "." + metadata.getExecutableSha1();
-                    executableFilePaths.add(Paths.get(basePath.toAbsolutePath().toString(), executableFileName));
+                        String executableFileName = baseName + "." + metadata.getDebugSha1()
+                                                                             .map(s -> "debug." + s)
+                                                                             .orElse(metadata.getExecutableSha1());
+
+                        Set<Path> executableFilePaths = executablePaths.computeIfAbsent(baseName, k -> new HashSet<>());
+                        executableFilePaths.add(Paths.get(basePath.toAbsolutePath().toString(), executableFileName));
+                    }
                 }
             }
+        }
+
+        if (executablePaths.size() == 0)
+        {
+            throw new IllegalStateException("Failed to locate executables for " + platformName);
         }
     }
 
@@ -96,4 +109,18 @@ public final class NativeFileTestsInfo
                               .collect(Collectors.toList());
     }
 
+    private static String getNftPlatformName()
+    {
+        String osName = System.getProperty("os.name");
+
+        if (osName.equalsIgnoreCase("Linux")) {
+            return "linux";
+        }
+
+        if (osName.contains("mac")) {
+            return "darwin";
+        }
+
+        throw new IllegalStateException("Unsupported OS " + osName);
+    }
 }
