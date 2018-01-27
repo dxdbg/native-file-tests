@@ -14,10 +14,10 @@ os:
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install scons md5sha1sum; fi
 script: scons
-after_script:
+before_deploy:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export NFT_PLATFORM_NAME="macos"; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export NFT_PLATFORM_NAME="linux"; fi
-  - ./dist.sh $NFT_PLATFORM_NAME v0.1.3
+  - ./dist.sh $NFT_PLATFORM_NAME $TRAVIS_TAG
 
 deploy:
   provider: releases
@@ -32,10 +32,9 @@ deploy:
 jobs:
   include:
     - stage: deploy-all
-      script:
-        - if [ -z "$TRAVIS_TAG" ]; then echo "Skipping deploy"; else echo ./dist-all.sh "$TRAVIS_TAG"; fi
-      after_script: skip
-      before_deploy: skip
+      script: skip
+      before_deploy:
+        - if [ -z "$TRAVIS_TAG" ]; then echo "Skipping deploy"; else echo ./dist-all.sh $TRAVIS_TAG; fi
       deploy:
         provider: releases
         api_key:
