@@ -2,11 +2,16 @@
 # travis-ci integration for native-file-tests
 #
 
-language: c
-script: scons
 os:
   - linux
   - osx
 
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install scons; fi
+
+language: c
+
+script: scons
+
+notifications:
+  email: false
