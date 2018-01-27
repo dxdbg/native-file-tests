@@ -1,0 +1,9 @@
+#
+# travis-ci integration for native-file-tests
+#
+
+language: c
+script: scons
+os:
+  - linux
+  - osx
