@@ -10,6 +10,7 @@
 package net.libudi.nativefiletests;
 
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Java object for a native file tests JSON file
@@ -18,7 +19,11 @@ public class NativeFileMetadata
 {
     private Map<String, String> objectSha1s;
 
+    private String strippedSha1;
+
     private String executableSha1;
+
+    private String debugSha1;
 
     private String machine;
 
@@ -46,6 +51,26 @@ public class NativeFileMetadata
     public void setExecutableSha1(String executableSha1)
     {
         this.executableSha1 = executableSha1;
+    }
+
+    public Optional<String> getDebugSha1()
+    {
+        return Optional.ofNullable(debugSha1);
+    }
+
+    public void setDebugSha1(String debugSha1)
+    {
+        this.debugSha1 = debugSha1;
+    }
+
+    public String getStrippedSha1()
+    {
+        return strippedSha1;
+    }
+
+    public void setStrippedSha1(String strippedSha1)
+    {
+        this.strippedSha1 = strippedSha1;
     }
 
     public String getMachine()
