@@ -135,11 +135,8 @@ fn convert_to_nft_platform(cargo_platform: &str) -> &str {
 }
 
 fn get_exec_file_name(prefix: &str, metadata: &NativeFileMetadata) -> String {
-    let suffix = match metadata.debug_exec {
-        Some(ref debug_sha1) => ".debug".to_owned() + debug_sha1,
-        None => metadata.executable.clone()
-    };
-    prefix.to_owned() + "." + &suffix
+
+    prefix.to_owned() + "." + &metadata.executable
 }
 
 fn get_metadata(json_path: &PathBuf) -> NativeFileMetadata {
