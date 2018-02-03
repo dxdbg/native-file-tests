@@ -14,17 +14,18 @@ BASE_URL="https://github.com/udidb/native-file-tests/releases/download/$VERSION/
 URLS=($BASE_URL-macos-$VERSION.zip $BASE_URL-linux-$VERSION.zip)
 
 for url in ${URLS[@]}; do
-    curl -sSfL $url || {
+    file_name=$(basename $url)
+
+    curl -o $file_name -sSfL $url || {
         echo "Failed to download $url"
         exit 1
     }
 
-    file_name=$(basename $url)
 
-    unzip -j $file_name -d native-file-tests || {
+    unzip -j $file_name -d native-file-tests-$VERSION || {
         echo "Failed to extract $file_name"
         exit 1
     }
 done
 
-zip -r native-file-tests-$VERSION.zip native-file-tests/
+zip -r native-file-tests-$VERSION.zip native-file-tests-$VERSION/
