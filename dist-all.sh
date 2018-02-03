@@ -26,3 +26,5 @@ for url in ${URLS[@]}; do
         exit 1
     }
 done
+
+zip -r native-file-tests-$VERSION.zip native-file-tests/

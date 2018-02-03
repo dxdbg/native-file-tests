@@ -23,7 +23,7 @@ deploy:
   provider: releases
   api_key:
     secure: "Dpw6aKsvDeeQTDD5wwKYDOt5WcFdgla6aglJXk/IIDtam8lX3ZKUJA/Pk6rOUyA6AyhO4TJcODt37WTKQDe+o832Yyw4SVp0UFDRcxd6ErybzEkHkRBrhJWq0cJmSkHv9GmlGrno8NgjhplbHGsWA7C7sMkCh2WAB2zJRomdXgY="
-  file: ''
+  file: native-file-tests-$NFT_PLATFORM_NAME-$TRAVIS_TAG.zip
   skip_cleanup: true
   on:
     repo: udidb/native-file-tests
@@ -39,7 +39,7 @@ jobs:
         provider: releases
         api_key:
           secure: "Dpw6aKsvDeeQTDD5wwKYDOt5WcFdgla6aglJXk/IIDtam8lX3ZKUJA/Pk6rOUyA6AyhO4TJcODt37WTKQDe+o832Yyw4SVp0UFDRcxd6ErybzEkHkRBrhJWq0cJmSkHv9GmlGrno8NgjhplbHGsWA7C7sMkCh2WAB2zJRomdXgY="
-        file: ''
+        file: native-file-tests-$TRAVIS_TAG.zip
         skip_cleanup: true
         on:
           repo: udidb/native-file-tests
