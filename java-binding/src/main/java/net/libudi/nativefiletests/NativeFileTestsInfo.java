@@ -60,9 +60,7 @@ public final class NativeFileTestsInfo
                                                                               file))
                                                        .collect(Collectors.toList()));
 
-                        String executableFileName = baseName + "." + metadata.getDebugSha1()
-                                                                             .map(s -> "debug." + s)
-                                                                             .orElse(metadata.getExecutableSha1());
+                        String executableFileName = baseName + "." + metadata.getExecutableSha1();
 
                         Set<Path> executableFilePaths = executablePaths.computeIfAbsent(baseName, k -> new HashSet<>());
                         executableFilePaths.add(Paths.get(basePath.toAbsolutePath().toString(), executableFileName));
