@@ -17,6 +17,8 @@ import java.util.Optional;
  */
 public class NativeFileMetadata
 {
+    private String baseName;
+
     private Map<String, String> objectSha1s;
 
     private String strippedSha1;
@@ -32,6 +34,16 @@ public class NativeFileMetadata
     private Map<String, String> flags;
 
     private String compiler;
+
+    public String getBaseName()
+    {
+        return baseName;
+    }
+
+    public void setBaseName(String baseName)
+    {
+        this.baseName = baseName;
+    }
 
     public Map<String, String> getObjectSha1s()
     {

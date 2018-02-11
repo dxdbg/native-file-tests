@@ -44,10 +44,10 @@ public final class NativeFileTestsInfo
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(basePath, "*.json.*")) {
             for (Path jsonFile : stream)
             {
-                String baseName = jsonFile.getFileName().toString().split("\\.")[0];
-
                 try (InputStream jsonFileStream = Files.newInputStream(jsonFile)) {
                     NativeFileMetadata metadata = objectMapper.readValue(jsonFileStream, NativeFileMetadata.class);
+
+                    String baseName = metadata.getBaseName();
 
                     if (metadata.getPlatform().equals(platformName)) {
                         Set<Path> objectFilePaths = objectPaths.computeIfAbsent(baseName, k -> new HashSet<>());
