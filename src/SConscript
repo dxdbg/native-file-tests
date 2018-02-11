@@ -40,6 +40,7 @@ def GenerateProgramMetadata(target, source, env):
         obj_sha1s[obj.name] = obj_sha1
 
     metadata = dict()
+    metadata["baseName"] = executable.name
     metadata["flags"] = flags
     metadata["platform"] = system
     metadata["compiler"] = subprocess.check_output("gcc --version", shell=True)
