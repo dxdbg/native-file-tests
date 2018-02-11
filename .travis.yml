@@ -34,7 +34,7 @@ jobs:
     - stage: deploy-all
       script: skip
       before_deploy:
-        - if [ -z "$TRAVIS_TAG" ]; then echo "Skipping deploy"; else echo ./dist-all.sh $TRAVIS_TAG; fi
+        - if [ -z "$TRAVIS_TAG" ]; then echo "Skipping deploy"; else ./dist-all.sh $TRAVIS_TAG; fi
       deploy:
         provider: releases
         api_key:
