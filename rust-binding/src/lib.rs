@@ -40,6 +40,9 @@ const N_ENSYM: u8 = 78;
 #[derive(Debug,Serialize,Deserialize)]
 struct NativeFileMetadata {
 
+    #[serde(rename = "configName")]
+    config_name: String,
+
     #[serde(rename = "baseName")]
     base_name: String,
 

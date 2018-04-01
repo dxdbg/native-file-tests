@@ -17,6 +17,8 @@ import java.util.Optional;
  */
 public class NativeFileMetadata
 {
+    private String configName;
+
     private String baseName;
 
     private Map<String, String> objectSha1s;
@@ -34,6 +36,16 @@ public class NativeFileMetadata
     private Map<String, String> flags;
 
     private String compiler;
+
+    public String getConfigName()
+    {
+        return configName;
+    }
+
+    public void setConfigName(String configName)
+    {
+        this.configName = configName;
+    }
 
     public String getBaseName()
     {

@@ -9,63 +9,84 @@ import hashlib
 
 system = platform.system().lower()
 
-def GenerateProgramMetadata(target, source, env):
-    flags = dict()
-    flags["CFLAGS"] = str(env["CFLAGS"])
-    flags["LINKFLAGS"] = str(env["LINKFLAGS"])
+def CreateProgramMetadataGenerator(config):
+    def GenerateProgramMetadata(target, source, env):
+        flags = dict()
+        flags["CFLAGS"] = str(env["CFLAGS"])
+        flags["LINKFLAGS"] = str(env["LINKFLAGS"])
 
-    executable = source[0]
-    executable_file = open(executable.abspath, "r")
-    executable_sha1 = hashlib.sha1(executable_file.read()).hexdigest()
-    executable_file.close()
+        executable = source[0]
+        executable_file = open(executable.abspath, "r")
+        executable_sha1 = hashlib.sha1(executable_file.read()).hexdigest()
+        executable_file.close()
 
-    stripped = source[1]
-    stripped_file = open(stripped.abspath, "r")
-    stripped_sha1 = hashlib.sha1(stripped_file.read()).hexdigest()
-    stripped_file.close()
+        stripped = source[1]
+        stripped_file = open(stripped.abspath, "r")
+        stripped_sha1 = hashlib.sha1(stripped_file.read()).hexdigest()
+        stripped_file.close()
 
-    debug = source[2]
-    if debug.abspath != executable.abspath:
-        debug_file = open(debug.abspath, "r")
-        debug_sha1 = hashlib.sha1(debug_file.read()).hexdigest()
-        debug_file.close()
-    else:
-        debug_sha1 = None
+        debug = source[2]
+        if debug.abspath != executable.abspath:
+            debug_file = open(debug.abspath, "r")
+            debug_sha1 = hashlib.sha1(debug_file.read()).hexdigest()
+            debug_file.close()
+        else:
+            debug_sha1 = None
 
-    obj_sha1s = dict()
-    for obj in source[2:]:
-        obj_file = open(obj.abspath, "r")
-        obj_sha1 = hashlib.sha1(obj_file.read()).hexdigest()
-        obj_file.close()
-        obj_sha1s[obj.name] = obj_sha1
+        obj_sha1s = dict()
+        for obj in source[2:]:
+            obj_file = open(obj.abspath, "r")
+            obj_sha1 = hashlib.sha1(obj_file.read()).hexdigest()
+            obj_file.close()
+            obj_sha1s[obj.name] = obj_sha1
 
-    metadata = dict()
-    metadata["baseName"] = executable.name
-    metadata["flags"] = flags
-    metadata["platform"] = system
-    metadata["compiler"] = subprocess.check_output("gcc --version", shell=True)
-    metadata["machine"] = platform.machine().lower()
-    metadata["objectSha1s"] = obj_sha1s
-    metadata["executableSha1"] = executable_sha1
-    metadata["debugSha1"] = debug_sha1
-    metadata["strippedSha1"] = stripped_sha1
+        metadata = dict()
+        metadata["configName"] = config
+        metadata["baseName"] = executable.name
+        metadata["flags"] = flags
+        metadata["platform"] = system
+        metadata["compiler"] = subprocess.check_output("gcc --version", shell=True)
+        metadata["machine"] = platform.machine().lower()
+        metadata["objectSha1s"] = obj_sha1s
+        metadata["executableSha1"] = executable_sha1
+        metadata["debugSha1"] = debug_sha1
+        metadata["strippedSha1"] = stripped_sha1
 
-    json_output = open(target[0].abspath, "w")
-    json_output.write(json.dumps(metadata))
-    json_output.flush()
-    json_output.close()
+        json_output = open(target[0].abspath, "w")
+        json_output.write(json.dumps(metadata))
+        json_output.flush()
+        json_output.close()
 
-    return None
+        return None
+
+    return GenerateProgramMetadata
 
 def AddDebugFlag(env):
     if env['CC'] == 'gcc':
         env.Append(CFLAGS = '-g')
 
+def AddPieFlag(env):
+    if platform.system() == 'Linux':
+        if env['CC'] == 'gcc':
+            env.Append(CFLAGS = '-fPIE')
+            env.Append(LINKFLAGS = '-pie')
+
+def DisablePieFlag(env):
+    if platform.system() == 'Darwin':
+        if env['CC'] == 'gcc':
+            env.Append(LINKFLAGS = '-Wl,-no_pie')
+
 def DebugNoOptDynamic(env):
     AddDebugFlag(env)
+    DisablePieFlag(env)
+
+def DebugNoOpDynamicPie(env):
+    AddDebugFlag(env)
+    AddPieFlag(env)
 
 configs = list()
 configs.append(("debug-noopt-dynamic", DebugNoOptDynamic))
+configs.append(("debug-noopt-dynamic-pie", DebugNoOpDynamicPie))
 
 Import('rootenv')
 
@@ -121,6 +142,6 @@ for config in configs:
         metadata_sources = list()
         metadata_sources.append(executables)
         metadata_sources.append(objs)
-        loopenv.Command(source_config["name"] + "-" + config[0] + ".json", metadata_sources, GenerateProgramMetadata)
+        loopenv.Command(source_config["name"] + "-" + config[0] + ".json", metadata_sources, CreateProgramMetadataGenerator(config[0]))
 
 # vim: ft=python
