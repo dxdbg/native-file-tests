@@ -26,7 +26,7 @@ deploy:
   file: native-file-tests-$NFT_PLATFORM_NAME-$TRAVIS_TAG.zip
   skip_cleanup: true
   on:
-    repo: udidb/native-file-tests
+    repo: dxdbg/native-file-tests
     tags: true
 
 jobs:
@@ -42,5 +42,5 @@ jobs:
         file: native-file-tests-$TRAVIS_TAG.zip
         skip_cleanup: true
         on:
-          repo: udidb/native-file-tests
+          repo: dxdbg/native-file-tests
           tags: true
