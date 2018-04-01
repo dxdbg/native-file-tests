@@ -9,7 +9,7 @@ if [ $# -ne 1 ]; then
 fi
 
 VERSION=$1
-BASE_URL="https://github.com/udidb/native-file-tests/releases/download/$VERSION/native-file-tests"
+BASE_URL="https://github.com/dxdbg/native-file-tests/releases/download/$VERSION/native-file-tests"
 
 URLS=($BASE_URL-macos-$VERSION.zip $BASE_URL-linux-$VERSION.zip)
 
