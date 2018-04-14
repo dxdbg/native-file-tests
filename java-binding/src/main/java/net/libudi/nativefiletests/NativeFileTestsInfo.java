@@ -115,7 +115,7 @@ public final class NativeFileTestsInfo
             return "linux";
         }
 
-        if (osName.contains("mac")) {
+        if (osName.contains("Mac")) {
             return "darwin";
         }
 
