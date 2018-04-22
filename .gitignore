@@ -5,3 +5,4 @@ dist
 rust-binding/target
 *.iml
 java-binding/target
+native-file-tests-*

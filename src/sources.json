@@ -21,6 +21,9 @@
             ],
             "darwin" : [
                 "bin_lib_darwin.c"
+            ],
+            "windows": [
+                "bin_lib_win.c"
             ]
         },
         "libs" : [
@@ -42,21 +45,29 @@
             ]
         },
         "libs" : [
+        ],
+        "platforms" : [
+            "linux",
+            "darwin"
         ]
     },
     {
-        "name" : "waitthread",
+        "name" : "workerthreads",
         "sources" : [
             "bin_lib.c"
         ],
         "platform_sources" : {
             "linux" : [
                 "bin_lib_linux.c",
-                "waitthread-posix.c"
+                "workerthreads-posix.c"
             ],
             "darwin" : [
                 "bin_lib_darwin.c",
-                "waitthread-posix.c"
+                "workerthreads-posix.c"
+            ],
+            "windows": [
+                "bin_lib_win.c",
+                "workerthreads-win.c"
             ]
         },
         "libs" : {

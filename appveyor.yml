@@ -1,0 +1,48 @@
+#
+# appveyor configuration for native-file-tests
+#
+
+environment:
+  matrix:
+    - RUST_VERSION: 1.25.0
+    - TARGET: x86_64-pc-windows-msvc
+
+install:
+  - curl -sSf -o rustup-init.exe https://win.rustup.rs/
+  - rustup-init.exe -y --default-host %TARGET% --default-toolchain %RUST_VERSION%
+  - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
+  - rustc -Vv
+  - cargo -V
+  - pip install --egg scons
+
+build: false
+
+test_script:
+  - set JAVA_HOME=C:\Program Files\Java\jdk1.8.0
+  - ps: >-
+      If ($Env:APPVEYOR_REPO_TAG) {
+        $Env:TAG = $Env:$APPVEYOR_REPO_TAG_NAME
+      } else {
+        $Env:TAG = 'snapshot'
+      }
+  - scons
+  - python dist.py windows $TAG
+  - ps: $Env:NFT_DIR = "$pwd\\native-file-tests-windows-$Env:TAG"
+  - cd rust-binding
+  - cargo build && cargo test
+  - cd ..\java-binding
+  - mvn clean verifiy -Dnative.file.tests.basePath=$Env:NFT_DIR
+
+cache:
+  - C:\Users\appveyor\.cargo\registry
+  - target
+
+branches:
+  only:
+    - master
+
+notifications:
+  - provider: Email
+    on_build_success: false
+    on_build_failure: false
+    on_build_status_changed: false
