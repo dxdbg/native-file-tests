@@ -52,7 +52,7 @@ public final class NativeFileTestsInfo
                     if (metadata.getPlatform().equals(platformName)) {
                         Set<Path> objectFilePaths = objectPaths.computeIfAbsent(baseName, k -> new HashSet<>());
 
-                        objectFilePaths.addAll(metadata.getObjectSha1s()
+                        objectFilePaths.addAll(metadata.getObjectSha256s()
                                                        .entrySet()
                                                        .stream()
                                                        .map(e -> e.getKey() + "." + e.getValue())
@@ -60,7 +60,7 @@ public final class NativeFileTestsInfo
                                                                               file))
                                                        .collect(Collectors.toList()));
 
-                        String executableFileName = baseName + "." + metadata.getExecutableSha1();
+                        String executableFileName = baseName + "." + metadata.getExecutableSha256();
 
                         Set<Path> executableFilePaths = executablePaths.computeIfAbsent(baseName, k -> new HashSet<>());
                         executableFilePaths.add(Paths.get(basePath.toAbsolutePath().toString(), executableFileName));

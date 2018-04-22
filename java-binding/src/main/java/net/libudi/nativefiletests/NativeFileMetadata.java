@@ -21,13 +21,17 @@ public class NativeFileMetadata
 
     private String baseName;
 
-    private Map<String, String> objectSha1s;
+    private String objectSuffix;
 
-    private String strippedSha1;
+    private Map<String, String> objectSha256s;
 
-    private String executableSha1;
+    private String strippedSha256;
 
-    private String debugSha1;
+    private String executableSuffix;
+
+    private String executableSha256;
+
+    private String debugSha256;
 
     private String machine;
 
@@ -57,44 +61,44 @@ public class NativeFileMetadata
         this.baseName = baseName;
     }
 
-    public Map<String, String> getObjectSha1s()
+    public Map<String, String> getObjectSha256s()
     {
-        return objectSha1s;
+        return objectSha256s;
     }
 
-    public void setObjectSha1s(Map<String, String> objectSha1s)
+    public void setObjectSha256s(Map<String, String> objectSha256s)
     {
-        this.objectSha1s = objectSha1s;
+        this.objectSha256s = objectSha256s;
     }
 
-    public String getExecutableSha1()
+    public String getExecutableSha256()
     {
-        return executableSha1;
+        return executableSha256;
     }
 
-    public void setExecutableSha1(String executableSha1)
+    public void setExecutableSha256(String executableSha256)
     {
-        this.executableSha1 = executableSha1;
+        this.executableSha256 = executableSha256;
     }
 
-    public Optional<String> getDebugSha1()
+    public Optional<String> getDebugSha256()
     {
-        return Optional.ofNullable(debugSha1);
+        return Optional.ofNullable(debugSha256);
     }
 
-    public void setDebugSha1(String debugSha1)
+    public void setDebugSha256(String debugSha256)
     {
-        this.debugSha1 = debugSha1;
+        this.debugSha256 = debugSha256;
     }
 
-    public String getStrippedSha1()
+    public String getStrippedSha256()
     {
-        return strippedSha1;
+        return strippedSha256;
     }
 
-    public void setStrippedSha1(String strippedSha1)
+    public void setStrippedSha256(String strippedSha256)
     {
-        this.strippedSha1 = strippedSha1;
+        this.strippedSha256 = strippedSha256;
     }
 
     public String getMachine()
@@ -135,5 +139,25 @@ public class NativeFileMetadata
     public void setCompiler(String compiler)
     {
         this.compiler = compiler;
+    }
+
+    public String getObjectSuffix()
+    {
+        return objectSuffix;
+    }
+
+    public void setObjectSuffix(String objectSuffix)
+    {
+        this.objectSuffix = objectSuffix;
+    }
+
+    public String getExecutableSuffix()
+    {
+        return executableSuffix;
+    }
+
+    public void setExecutableSuffix(String executableSuffix)
+    {
+        this.executableSuffix = executableSuffix;
     }
 }

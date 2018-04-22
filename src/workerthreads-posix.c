@@ -24,8 +24,6 @@ struct threadArg {
     pthread_mutex_t *term_mutex;
 };
 
-struct threadArg threadStruct = { -1, NULL };
-
 void usr1_handle(int sig) {
     long lwp_id = udi_get_thread_id(getpid());
 
@@ -40,8 +38,6 @@ void breakpoint_thr_func() {
 
 void *entry(void *arg) {
     struct threadArg *thisArg = (struct threadArg *)arg;
-
-    threadStruct = *thisArg;
 
     long lwp_id = udi_get_thread_id(getpid());
     bin_printf("%ld waiting on lock\n", lwp_id);
@@ -77,7 +73,7 @@ void *entry(void *arg) {
     }
 
     bin_printf("%ld released term lock\n", lwp_id);
-    
+
     return NULL;
 }
 

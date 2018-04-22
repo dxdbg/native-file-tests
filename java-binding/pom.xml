@@ -9,6 +9,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <native.file.tests.basePath>${project.basedir}/../native-file-tests</native.file.tests.basePath>
     </properties>
 
     <dependencies>

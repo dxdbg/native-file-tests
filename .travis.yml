@@ -5,19 +5,38 @@
 notifications:
   email: false
 
-language: c
+language: rust
 
 os:
   - linux
   - osx
 
+dist: trusty
+sudo: false
+
+rust:
+  - 1.25.0
+cache: cargo
+
+jdk:
+  - oraclejdk8
+
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install scons md5sha1sum; fi
-script: scons
-before_deploy:
+
+install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export NFT_PLATFORM_NAME="macos"; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export NFT_PLATFORM_NAME="linux"; fi
-  - ./dist.sh $NFT_PLATFORM_NAME $TRAVIS_TAG
+  - if [ -z "$TRAVIS_TAG" ]; then TAG="snapshot"; else TAG="$TRAVIS_TAG"; fi
+  - scons
+  - python ./dist.py $NFT_PLATFORM_NAME $TAG
+  - export NFT_DIR=$(pwd)/native-file-tests-$NFT_PLATFORM_NAME-$TAG
+  - cd rust-binding
+  - cargo build && cargo test
+  - cd ../java-binding
+  - mvn clean verify -Dnative.file.tests.basePath=$NFT_DIR
+
+script: skip
 
 deploy:
   provider: releases
@@ -28,19 +47,3 @@ deploy:
   on:
     repo: dxdbg/native-file-tests
     tags: true
-
-jobs:
-  include:
-    - stage: deploy-all
-      script: skip
-      before_deploy:
-        - if [ -z "$TRAVIS_TAG" ]; then echo "Skipping deploy"; else ./dist-all.sh $TRAVIS_TAG; fi
-      deploy:
-        provider: releases
-        api_key:
-          secure: "Dpw6aKsvDeeQTDD5wwKYDOt5WcFdgla6aglJXk/IIDtam8lX3ZKUJA/Pk6rOUyA6AyhO4TJcODt37WTKQDe+o832Yyw4SVp0UFDRcxd6ErybzEkHkRBrhJWq0cJmSkHv9GmlGrno8NgjhplbHGsWA7C7sMkCh2WAB2zJRomdXgY="
-        file: native-file-tests-$TRAVIS_TAG.zip
-        skip_cleanup: true
-        on:
-          repo: dxdbg/native-file-tests
-          tags: true
