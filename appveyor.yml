@@ -24,6 +24,8 @@ install:
   - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
   - rustc -Vv
   - cargo -V
+  - where cl
+  - cl /?
 
 build: false
 
