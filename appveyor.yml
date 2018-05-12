@@ -2,13 +2,16 @@
 # appveyor configuration for native-file-tests
 #
 
-image: Visual Studio 2017
+image:
+- Visual Studio 2017
 
 environment:
   global:
     RUST_VERSION: 1.25.0
   matrix:
     - TARGET: x86_64-pc-windows-msvc
+
+version: '0.1.0.{build}'
 
 install:
   - python --version
@@ -32,7 +35,7 @@ test_script:
       } else {
         $Env:TAG = 'snapshot'
       }
-  - scons configure MSVC_VERSION=15.0
+  - scons configure MSVC_VERSION=14.1
   - scons
   - python dist.py windows $TAG
   - ps: $Env:NFT_DIR = "$pwd\\native-file-tests-windows-$Env:TAG"

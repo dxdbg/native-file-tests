@@ -4,7 +4,7 @@
     <groupId>net.libudi</groupId>
     <artifactId>native-file-tests</artifactId>
     <packaging>jar</packaging>
-    <version>1.0-SNAPSHOT</version>
+    <version>0.1.0-SNAPSHOT</version>
     <name>Native File Tests</name>
 
     <properties>
