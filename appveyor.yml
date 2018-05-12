@@ -50,6 +50,14 @@ cache:
   - C:\Users\appveyor\.cargo\registry
   - rust-binding\target
 
+deploy:
+  artifact: native-file-tests-windows-*.zip
+  auth_token:
+    secure: UvBnHAlUB3CKn3xPKG9z1+ZghBNXXsJqkHvA094ma8XyCMJWdYFQS67419we6XaD
+  on:
+    appveyor_repo_tag: true
+  provider: GitHub
+
 branches:
   only:
     - master
