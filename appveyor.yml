@@ -16,7 +16,7 @@ install:
   - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
   - rustc -Vv
   - cargo -V
-  - pip install scons
+  - pip install --egg scons
 
 build: false
 
