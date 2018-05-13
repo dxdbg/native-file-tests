@@ -40,7 +40,7 @@ test_script:
       }
   - scons configure MSVC_VERSION=14.1
   - scons
-  - python dist.py windows $TAG
+  - python dist.py windows %TAG%
   - ps: $Env:NFT_DIR = "$pwd\native-file-tests-windows-$Env:TAG"
   - cd rust-binding
   - cargo build && cargo test
