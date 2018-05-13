@@ -119,6 +119,10 @@ public final class NativeFileTestsInfo
             return "darwin";
         }
 
+        if (osName.contains("Windows")) {
+            return "windows";
+        }
+
         throw new IllegalStateException("Unsupported OS " + osName);
     }
 }
