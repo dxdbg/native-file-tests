@@ -26,7 +26,6 @@ install:
   - rustc -Vv
   - cargo -V
   - where cl
-  - cl /?
 
 build: false
 
