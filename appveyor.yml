@@ -45,7 +45,7 @@ test_script:
   - cd rust-binding
   - cargo build && cargo test
   - cd ..\java-binding
-  - mvn clean verifiy -Dnative.file.tests.basePath=$Env:NFT_DIR
+  - mvn clean verify -Dnative.file.tests.basePath=$Env:NFT_DIR
 
 cache:
   - C:\Users\appveyor\.cargo\registry
