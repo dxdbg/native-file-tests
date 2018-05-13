@@ -49,6 +49,7 @@ test_script:
 
 cache:
   - C:\Users\appveyor\.cargo\registry
+  - C:\Users\appveyor\.m2
   - rust-binding\target
 
 artifacts:
