@@ -14,7 +14,7 @@ environment:
 version: '0.1.0.{build}'
 
 install:
-  - '%comspec% /k "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"'
+  - call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
   - python --version
   - pip --version
   - pip install pypiwin32
