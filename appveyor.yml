@@ -45,6 +45,7 @@ test_script:
   - cargo build && cargo test
   - cd ..\java-binding
   - mvn clean verify -Dnative.file.tests.basePath=%NFT_DIR%
+  - cd %APPVEYOR_BUILD_FOLDER%
 
 cache:
   - C:\Users\appveyor\.cargo\registry

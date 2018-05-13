@@ -35,6 +35,7 @@ install:
   - cargo build && cargo test
   - cd ../java-binding
   - mvn clean verify -Dnative.file.tests.basePath=$NFT_DIR
+  - cd $TRAVIS_BUILD_DIR
 
 script: skip
 
