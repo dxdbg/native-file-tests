@@ -3,7 +3,7 @@
 #
 
 image:
-- Visual Studio 2017
+  - Visual Studio 2017
 
 environment:
   global:
@@ -14,7 +14,7 @@ environment:
 version: '0.1.0.{build}'
 
 install:
-  - %comspec% /k "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
+  - '%comspec% /k "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"'
   - python --version
   - pip --version
   - pip install pypiwin32
