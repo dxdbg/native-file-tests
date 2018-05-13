@@ -51,8 +51,10 @@ cache:
   - C:\Users\appveyor\.cargo\registry
   - rust-binding\target
 
+artifacts:
+  - path: native-file-tests-windows-*.zip
+
 deploy:
-  artifact: native-file-tests-windows-*.zip
   auth_token:
     secure: UvBnHAlUB3CKn3xPKG9z1+ZghBNXXsJqkHvA094ma8XyCMJWdYFQS67419we6XaD
   on:
