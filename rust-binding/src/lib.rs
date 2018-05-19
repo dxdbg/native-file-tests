@@ -24,6 +24,8 @@ use std::path::PathBuf;
 
 use goblin::Object;
 
+use pdb::FallibleIterator;
+
 use serde::Deserialize;
 use serde_json::Deserializer;
 
@@ -90,28 +92,26 @@ pub fn setup(nft_path: &PathBuf,
                 let metadata = get_metadata(&path);
                 if metadata.platform == platform {
                     if metadata.base_name == SIMPLE_BINARY_BASE_NAME {
-                        simple_path_opt =
-                            Some(nft_path.join(get_symbol_file_name(SIMPLE_BINARY_BASE_NAME,
-                                                                    platform,
-                                                                    &metadata)));
+                        let (exec, debug) = get_symbol_file_names(SIMPLE_BINARY_BASE_NAME,
+                                                                  &metadata);
+                        simple_path_opt = Some( ( nft_path.join(exec), nft_path.join(debug) ) )
                     } else if metadata.base_name == WORKERTHREADS_BINARY_BASE_NAME {
-                        workerthreads_path_opt =
-                            Some(nft_path.join(get_symbol_file_name(WORKERTHREADS_BINARY_BASE_NAME,
-                                                                    platform,
-                                                                    &metadata)));
+                        let (exec, debug) = get_symbol_file_names(WORKERTHREADS_BINARY_BASE_NAME,
+                                                                  &metadata);
+                        workerthreads_path_opt = Some( ( nft_path.join(exec), nft_path.join(debug) ) )
                     }
                 }
             }
         }
     }
 
-    let simple_path = simple_path_opt.expect("Path to simple binary was not set");
-    let workerthreads_path = workerthreads_path_opt.expect("Path to workerthreads binary was not set");
+    let simple_paths = simple_path_opt.expect("Path to simple binary was not set");
+    let workerthreads_paths = workerthreads_path_opt.expect("Path to workerthreads binary was not set");
 
     let mod_file_path = out_path.join("native_file_tests.rs");
     let mut mod_file = File::create(&mod_file_path).unwrap();
 
-    let symbols = build_symbols(platform, &simple_path, &workerthreads_path);
+    let symbols = build_symbols(platform, &simple_paths, &workerthreads_paths);
 
     let sym_defs = symbols.iter()
                           .map(|e| format!("pub const {}: u64 = {};\n", e.0, e.1))
@@ -123,8 +123,8 @@ pub const WORKERTHREADS_EXEC_PATH: &'static str = \"{}\";
 
 {}
 ",
-    simple_path.to_str().unwrap(),
-    workerthreads_path.to_str().unwrap(),
+    simple_paths.0.to_str().unwrap(),
+    workerthreads_paths.0.to_str().unwrap(),
     sym_defs);
 
     mod_file.write_all(&mod_file_content.into_bytes())
@@ -140,17 +140,19 @@ fn convert_to_nft_platform(rust_os: &str) -> &str {
     }
 }
 
-fn get_symbol_file_name(prefix: &str,
-                        platform: &str,
-                        metadata: &NativeFileMetadata) -> String {
+fn get_symbol_file_names(prefix: &str,
+                         metadata: &NativeFileMetadata) -> (String, String) {
 
-    match platform {
-        WINDOWS_PLATFORM => {
-            prefix.to_owned() + &metadata.exec_suffix + ".debug." +
-                metadata.debug_hash.as_ref().unwrap()
+    match metadata.debug_hash.as_ref() {
+        Some(debug_hash) => {
+            (
+                prefix.to_owned() + &metadata.exec_suffix + "." + &metadata.exec_hash,
+                prefix.to_owned() + &metadata.exec_suffix + ".debug." + debug_hash
+            )
         },
-        _ => {
-            prefix.to_owned() + "." + &metadata.exec_hash
+        None => {
+            let exec = prefix.to_owned() + &metadata.exec_suffix + "." + &metadata.exec_hash;
+            (exec.clone(), exec)
         }
     }
 }
@@ -164,21 +166,21 @@ fn get_metadata(json_path: &PathBuf) -> NativeFileMetadata {
 }
 
 fn build_symbols(platform: &str,
-                 simple_path: &PathBuf,
-                 workerthreads_path: &PathBuf) -> HashMap<&'static str, String> {
+                 simple_paths: &(PathBuf, PathBuf),
+                 workerthreads_paths: &(PathBuf, PathBuf) ) -> HashMap<&'static str, String> {
     let mut symbols = HashMap::new();
 
-    add_simple_binary_symbols(platform, simple_path, &mut symbols);
-    add_workerthreads_binary_symbols(platform, workerthreads_path, &mut symbols);
+    add_simple_binary_symbols(platform, simple_paths, &mut symbols);
+    add_workerthreads_binary_symbols(platform, workerthreads_paths, &mut symbols);
 
     symbols
 }
 
 fn add_simple_binary_symbols(platform: &str,
-                             path: &PathBuf,
+                             paths: &(PathBuf, PathBuf),
                              symbols: &mut HashMap<&'static str, String>) {
 
-    for_each_symbols(platform, path, |name, value, size| {
+    for_each_symbols(platform, paths, |name, value, size| {
         if name == "function1" {
             symbols.insert("SIMPLE_FUNCTION1", format!("0x{:x}", value));
         } else if name == "function2" {
@@ -189,7 +191,7 @@ fn add_simple_binary_symbols(platform: &str,
 }
 
 fn add_workerthreads_binary_symbols(platform: &str,
-                                 path: &PathBuf,
+                                 path: &(PathBuf, PathBuf),
                                  symbols: &mut HashMap<&'static str, String>) {
 
     for_each_symbols(platform, path, |name, value, _| {
@@ -209,13 +211,13 @@ fn add_workerthreads_binary_symbols(platform: &str,
 }
 
 fn for_each_symbols<F>(platform: &str,
-                       path: &PathBuf,
+                       paths: &(PathBuf, PathBuf),
                        func: F)
     where F: FnMut(&String, u64, u64) {
 
     match platform {
-        WINDOWS_PLATFORM => for_each_symbols_from_pdb(path, func),
-        _ => for_each_symbols_from_obj_file(path, func)
+        WINDOWS_PLATFORM => for_each_symbols_from_pdb(paths, func),
+        _ => for_each_symbols_from_obj_file(&paths.0, func)
     }
 
 }
@@ -268,8 +270,53 @@ fn for_each_symbols_from_obj_file<F>(path: &PathBuf,
     }
 }
 
-fn for_each_symbols_from_pdb<F>(_path: &PathBuf,
+fn for_each_symbols_from_pdb<F>(paths: &(PathBuf, PathBuf),
                                 mut func: F) where F: FnMut(&String, u64, u64) {
 
-    func(&"".to_owned(), 0, 0);
+    let mut binary_file = File::open(&paths.0).expect(&format!("Symbol file {:?} error",
+                                                              paths.0));
+    let mut buffer = vec![];
+    binary_file.read_to_end(&mut buffer).unwrap();
+
+    let image_base;
+    let addrs: Vec<u32> = match Object::parse(&buffer).unwrap() {
+        Object::PE(pe) => {
+            image_base = pe.header.optional_header.unwrap().windows_fields.image_base;
+            pe.sections.iter()
+                .map(|s| s.virtual_address)
+                .collect()
+        },
+        _ => {
+            panic!(format!("Unsupported file type for file {:?}", paths.0))
+        }
+    };
+
+    let pdb_file = std::fs::File::open(&paths.1).unwrap();
+    let mut pdb = pdb::PDB::open(pdb_file).unwrap();
+
+    let dbi = pdb.debug_information().unwrap();
+    let mut modules = dbi.modules().unwrap();
+    while let Some(module) = modules.next().unwrap() {
+        let module_info = pdb.module_info(&module).unwrap();
+        let mut symbol_iter = module_info.symbols().unwrap();
+        while let Some(symbol) = symbol_iter.next().unwrap() {
+            match symbol.parse() {
+                Ok(symbol_data) => {
+                    match symbol_data {
+                        pdb::SymbolData::Procedure(data) => {
+                            let seg_addr = addrs[(data.segment-1) as usize];
+                            let sym_addr = image_base + (seg_addr as u64) + (data.offset as u64);
+                            let sym_name = symbol.name().unwrap().to_string().into_owned();
+                            func(&sym_name,
+                                 sym_addr,
+                                 data.len as u64);
+                        },
+                        _ => {}
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
 }
+
