@@ -3,6 +3,7 @@ build
 .sconsign.dblite
 dist
 rust-binding/target
+rust-binding/Cargo.lock
 *.iml
 java-binding/target
 native-file-tests-*
