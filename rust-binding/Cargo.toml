@@ -1,7 +1,12 @@
 [package]
+description = "A library for working with the binaries in the native-file-tests distribution."
+homepage = "https://github.com/dxdbg/native-file-tests"
+repository = "https://github.com/dxdbg/native-file-tests.git"
+license = "MPL-2.0"
 name = "native-file-tests"
 version = "0.1.0"
 authors = ["Dan McNulty <dkmcnulty@gmail.com>"]
+exclude = [ "*.iml" ]
 
 [dependencies]
 goblin = "0.0.14"
@@ -9,3 +14,7 @@ serde =  "1.0"
 serde_derive = "1.0"
 serde_json = "1.0"
 pdb = { git = "https://github.com/mcnulty/pdb.git", branch = "procedure-symbol" }
+
+[badges]
+appveyor = { repository = "mcnulty/native-file-tests" }
+travis-ci = { repository = "dxdbg/native-file-tests" }
