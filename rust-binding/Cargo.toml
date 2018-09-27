@@ -1,5 +1,5 @@
 [package]
-name = "native_file_tests"
+name = "native-file-tests"
 version = "0.1.0"
 authors = ["Dan McNulty <dkmcnulty@gmail.com>"]
 
