@@ -13,7 +13,7 @@ goblin = "0.0.14"
 serde =  "1.0"
 serde_derive = "1.0"
 serde_json = "1.0"
-pdb = { git = "https://github.com/mcnulty/pdb.git", branch = "procedure-symbol" }
+pdb = "0.2.0"
 
 [badges]
 appveyor = { repository = "mcnulty/native-file-tests" }
