@@ -18,7 +18,6 @@ extern crate serde_json;
 
 use std::collections::HashMap;
 use std::fs::File;
-use std::io::Write;
 use std::io::Read;
 use std::path::PathBuf;
 
@@ -73,9 +72,49 @@ struct NativeFileMetadata {
     compiler: String
 }
 
-pub fn setup(nft_path: &PathBuf,
-             out_path: &PathBuf,
-             rust_os: &str) {
+#[derive(Debug)]
+pub struct TestMetadata {
+    simple_path: PathBuf,
+    workerthreads_path: PathBuf,
+    symbols: HashMap<&'static str, u64>
+}
+
+impl TestMetadata {
+    pub fn simple_path(&self) -> &PathBuf {
+        &self.simple_path
+    }
+
+    pub fn workerthreads_path(&self) -> &PathBuf {
+        &self.workerthreads_path
+    }
+
+    pub fn simple_function1_addr(&self) -> u64 {
+        *self.symbols.get("SIMPLE_FUNCTION1").unwrap()
+    }
+
+    pub fn simple_function2_addr(&self) -> u64 {
+        *self.symbols.get("SIMPLE_FUNCTION2").unwrap()
+    }
+
+    pub fn simple_function2_length(&self) -> u64 {
+        *self.symbols.get("SIMPLE_FUNCTION2_LENGTH").unwrap()
+    }
+
+    pub fn thread_break_addr(&self) -> u64 {
+        *self.symbols.get("THREAD_BREAK_FUNC").unwrap()
+    }
+
+    pub fn start_notification_addr(&self) -> u64 {
+        *self.symbols.get("START_NOTIFICATION_FUNC").unwrap()
+    }
+
+    pub fn term_notification_addr(&self) -> u64 {
+        *self.symbols.get("TERM_NOTIFICATION_FUNC").unwrap()
+    }
+}
+
+pub fn create_test_metadata(nft_path: &PathBuf,
+                            rust_os: &str) -> TestMetadata {
 
     let platform = convert_to_nft_platform(rust_os);
 
@@ -108,27 +147,13 @@ pub fn setup(nft_path: &PathBuf,
     let simple_paths = simple_path_opt.expect("Path to simple binary was not set");
     let workerthreads_paths = workerthreads_path_opt.expect("Path to workerthreads binary was not set");
 
-    let mod_file_path = out_path.join("native_file_tests.rs");
-    let mut mod_file = File::create(&mod_file_path).unwrap();
-
     let symbols = build_symbols(platform, &simple_paths, &workerthreads_paths);
 
-    let sym_defs = symbols.iter()
-                          .map(|e| format!("pub const {}: u64 = {};\n", e.0, e.1))
-                          .fold("".to_owned(), |acc, elem| acc + &elem);
-
-    let mod_file_content = format!("
-pub const SIMPLE_EXEC_PATH: &'static str = \"{}\";
-pub const WORKERTHREADS_EXEC_PATH: &'static str = \"{}\";
-
-{}
-",
-    simple_paths.0.to_str().unwrap(),
-    workerthreads_paths.0.to_str().unwrap(),
-    sym_defs);
-
-    mod_file.write_all(&mod_file_content.into_bytes())
-            .expect("Failed to write native file tests module");
+    TestMetadata{
+        simple_path: simple_paths.0,
+        workerthreads_path: workerthreads_paths.0,
+        symbols
+    }
 }
 
 fn convert_to_nft_platform(rust_os: &str) -> &str {
@@ -167,7 +192,7 @@ fn get_metadata(json_path: &PathBuf) -> NativeFileMetadata {
 
 fn build_symbols(platform: &str,
                  simple_paths: &(PathBuf, PathBuf),
-                 workerthreads_paths: &(PathBuf, PathBuf) ) -> HashMap<&'static str, String> {
+                 workerthreads_paths: &(PathBuf, PathBuf) ) -> HashMap<&'static str, u64> {
     let mut symbols = HashMap::new();
 
     add_simple_binary_symbols(platform, simple_paths, &mut symbols);
@@ -178,32 +203,32 @@ fn build_symbols(platform: &str,
 
 fn add_simple_binary_symbols(platform: &str,
                              paths: &(PathBuf, PathBuf),
-                             symbols: &mut HashMap<&'static str, String>) {
+                             symbols: &mut HashMap<&'static str, u64>) {
 
     for_each_symbols(platform, paths, |name, value, size| {
         if name == "function1" {
-            symbols.insert("SIMPLE_FUNCTION1", format!("0x{:x}", value));
+            symbols.insert("SIMPLE_FUNCTION1", value);
         } else if name == "function2" {
-            symbols.insert("SIMPLE_FUNCTION2", format!("0x{:x}", value));
-            symbols.insert("SIMPLE_FUNCTION2_LENGTH", size.to_string());
+            symbols.insert("SIMPLE_FUNCTION2", value);
+            symbols.insert("SIMPLE_FUNCTION2_LENGTH", size);
         }
     });
 }
 
 fn add_workerthreads_binary_symbols(platform: &str,
-                                 path: &(PathBuf, PathBuf),
-                                 symbols: &mut HashMap<&'static str, String>) {
+                                    path: &(PathBuf, PathBuf),
+                                    symbols: &mut HashMap<&'static str, u64>) {
 
     for_each_symbols(platform, path, |name, value, _| {
         match name.as_str() {
             "breakpoint_thr_func" => {
-                symbols.insert("THREAD_BREAK_FUNC", format!("0x{:x}", value));
+                symbols.insert("THREAD_BREAK_FUNC", value);
             },
             "start_notification" => {
-                symbols.insert("START_NOTIFICATION_FUNC", format!("0x{:x}", value));
+                symbols.insert("START_NOTIFICATION_FUNC", value);
             },
             "term_notification" => {
-                symbols.insert("TERM_NOTIFICATION_FUNC", format!("0x{:x}", value));
+                symbols.insert("TERM_NOTIFICATION_FUNC", value);
             },
             _ => {}
         };

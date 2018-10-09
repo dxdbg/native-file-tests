@@ -16,12 +16,8 @@ use std::path::PathBuf;
 fn setup() {
     let nft_dir = std::env::var("NFT_DIR").unwrap();
 
-    let out_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("target");
     let nft_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("..").join(nft_dir);
 
-    native_file_tests::setup(&nft_path,
-                             &out_path,
-                             &std::env::consts::OS);
-
-    assert!(out_path.join("native_file_tests.rs").exists());
+    native_file_tests::create_test_metadata(&nft_path,
+                                            &std::env::consts::OS);
 }
