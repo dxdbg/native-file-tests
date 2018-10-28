@@ -10,6 +10,7 @@ language: rust
 os:
   - linux
   - osx
+  - windows
 
 dist: trusty
 sudo: false
@@ -26,14 +27,17 @@ jdk:
 
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install scons md5sha1sum; fi
+  - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then pip install pypiwin32; pip install wheel; pip install scons==3.0.1; fi
 
 install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export NFT_PLATFORM_NAME="macos"; fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export NFT_PLATFORM_NAME="linux"; fi
+  - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then export NFT_PLATFORM_NAME="windows"; fi
   - if [ -z "$TRAVIS_TAG" ]; then TAG="snapshot"; else TAG="$TRAVIS_TAG"; fi
   - scons
   - python ./dist.py $NFT_PLATFORM_NAME $TAG
-  - export NFT_DIR=$(pwd)/native-file-tests-$NFT_PLATFORM_NAME-$TAG
+  - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then export NFT_DIR=$(cygpath -w $(pwd)/native-file-tests-$NFT_PLATFORM_NAME-$TAG); fi
+  - if [[ "$TRAVIS_OS_NAME" != "windows" ]]; then export NFT_DIR=$(pwd)/native-file-tests-$NFT_PLATFORM_NAME-$TAG; fi
   - cd rust-binding
   - cargo build && cargo test
   - cd ../java-binding
