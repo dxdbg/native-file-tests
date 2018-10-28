@@ -26,12 +26,8 @@ jdk:
   - oraclejdk8
 
 before_install:
-  - python --version
-  - rustc -Vv
-  - cargo -V
-  - where cl
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install scons md5sha1sum; fi
-  - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then pip install pypiwin32; pip install wheel; pip install scons==3.0.1; fi
+  - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then choco install pip; pip install pypiwin32; pip install wheel; pip install scons==3.0.1; fi
 
 install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export NFT_PLATFORM_NAME="macos"; fi
