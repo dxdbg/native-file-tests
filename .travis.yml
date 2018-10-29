@@ -30,6 +30,7 @@ before_install:
     brew install scons md5sha1sum;
     elif [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
     choco install python2;
+    export PATH=$PATH:/cygdrive/c/Python27
     pip install pypiwin32;
     pip install wheel;
     pip install scons==3.0.1;
