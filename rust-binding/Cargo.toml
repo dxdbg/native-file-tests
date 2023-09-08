@@ -5,19 +5,13 @@ repository = "https://github.com/dxdbg/native-file-tests.git"
 license = "MPL-2.0"
 name = "native-file-tests"
 version = "0.1.0"
-authors = ["Dan McNulty <dkmcnulty@gmail.com>"]
-exclude = [ "*.iml" ]
+authors = ["Dan McNulty <mcnulty@users.noreply.github.com>"]
+edition = "2021"
 
 [dependencies]
-goblin = "0.0.14"
+goblin = "0.7.1"
 serde =  "1.0"
 serde_derive = "1.0"
 serde_json = "1.0"
-pdb = "0.2.0"
-
-[patch.crates-io]
-pdb = { git = "https://github.com/mcnulty/pdb.git", branch = "procedure-symbol" }
-
-[badges]
-appveyor = { repository = "mcnulty/native-file-tests" }
-travis-ci = { repository = "dxdbg/native-file-tests" }
+pdb = "0.8.0"
+thiserror = "1.0.48"

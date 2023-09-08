@@ -8,16 +8,17 @@
 //
 #![deny(warnings)]
 
-extern crate native_file_tests;
-
 use std::path::PathBuf;
 
 #[test]
-fn setup() {
+fn setup() -> Result<(), native_file_tests::Error> {
     let nft_dir = std::env::var("NFT_DIR").unwrap();
 
-    let nft_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("..").join(nft_dir);
+    let nft_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("..")
+        .join(nft_dir);
 
-    native_file_tests::create_test_metadata(&nft_path,
-                                            &std::env::consts::OS);
+    native_file_tests::create_test_metadata(&nft_path, std::env::consts::OS)?;
+
+    Ok(())
 }

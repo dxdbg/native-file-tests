@@ -27,13 +27,13 @@ def CreateProgramMetadataGenerator(config):
         flags["LINKFLAGS"] = str(env["LINKFLAGS"])
 
         executable = source[0]
-        executable_file = open(executable.abspath, "r")
+        executable_file = open(executable.abspath, "rb")
         executable_sha256 = hashlib.sha256(executable_file.read()).hexdigest()
         executable_file.close()
 
         stripped = source[1]
         if stripped.abspath != executable.abspath:
-            stripped_file = open(stripped.abspath, "r")
+            stripped_file = open(stripped.abspath, "rb")
             stripped_sha256 = hashlib.sha256(stripped_file.read()).hexdigest()
             stripped_file.close()
         else:
@@ -41,7 +41,7 @@ def CreateProgramMetadataGenerator(config):
 
         debug = source[2]
         if debug.abspath != executable.abspath:
-            debug_file = open(debug.abspath, "r")
+            debug_file = open(debug.abspath, "rb")
             debug_sha256 = hashlib.sha256(debug_file.read()).hexdigest()
             debug_file.close()
         else:
@@ -50,7 +50,7 @@ def CreateProgramMetadataGenerator(config):
         obj_sha256s = dict()
         if len(source) > 3:
             for obj in source[3:]:
-                obj_file = open(obj.abspath, "r")
+                obj_file = open(obj.abspath, "rb")
                 obj_sha256 = hashlib.sha256(obj_file.read()).hexdigest()
                 obj_file.close()
                 obj_sha256s[obj.name] = obj_sha256
@@ -62,7 +62,7 @@ def CreateProgramMetadataGenerator(config):
         metadata["baseName"] = base_name
         metadata["flags"] = flags
         metadata["platform"] = system
-        metadata["compiler"] = compiler_version
+        metadata["compiler"] = str(compiler_version)
         metadata["machine"] = platform.machine().lower()
         metadata["objectSha256s"] = obj_sha256s
         metadata["executableSha256"] = executable_sha256
@@ -72,7 +72,7 @@ def CreateProgramMetadataGenerator(config):
         metadata["objectSuffix"] = env["OBJSUFFIX"]
 
         json_output = open(target[0].abspath, "w")
-        json_output.write(json.dumps(metadata))
+        json.dump(metadata, json_output)
         json_output.flush()
         json_output.close()
 

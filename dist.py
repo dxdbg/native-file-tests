@@ -2,6 +2,10 @@
 #
 # Script to package a .zip containing the artifacts
 #
+# NOTE: this is implemented in Python to allow it to be used on Windows
+# without requiring Cygwin or similar.
+#
+
 import sys
 import shutil
 import os

@@ -5,3 +5,4 @@ dist
 *.iml
 java-binding/target
 native-file-tests-*
+.DS_Store
