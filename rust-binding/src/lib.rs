@@ -18,9 +18,7 @@ use goblin::Object;
 
 use pdb::FallibleIterator;
 
-use serde::Deserialize;
 use serde_derive::{Deserialize, Serialize};
-use serde_json::Deserializer;
 use thiserror::Error;
 
 const SIMPLE_BINARY_BASE_NAME: &str = "simple-debug-noopt-dynamic";
@@ -296,9 +294,7 @@ fn get_metadata(json_path: &Path) -> Result<NativeFileMetadata, Error> {
         )
     })?;
 
-    let mut de = Deserializer::from_reader(&mut json_file);
-
-    Deserialize::deserialize(&mut de).map_err(|e| Error::FailedDeserialization {
+    serde_json::from_reader(&mut json_file).map_err(|e| Error::FailedDeserialization {
         path: format!("{}", json_path.display()),
         source: e,
     })
